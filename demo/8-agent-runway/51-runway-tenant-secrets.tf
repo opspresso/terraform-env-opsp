@@ -39,6 +39,12 @@ resource "aws_iam_role_policy" "runway_tenant_secrets" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid      = "NexusImagePullCredential"
+        Effect   = "Allow"
+        Action   = ["ssm:GetParameter", "ssm:GetParameters"]
+        Resource = "arn:aws:ssm:${var.region}:${local.account_id}:parameter/k8s/common/nexus/runway-reader-password"
+      },
+      {
         Sid    = "OwnEnvironmentVariables"
         Effect = "Allow"
         Action = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
