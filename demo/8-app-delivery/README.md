@@ -1,7 +1,7 @@
 # 8-app-delivery
 
 Argo Workflows의 앱 Delivery가 쓰는 AWS 리소스입니다. 이미지 push 역할과, kro `RdsPostgres`·`ValkeyCache`가 만드는 RDS 인스턴스·ElastiCache Serverless cache의 공유 네트워크 리소스를 관리합니다.
-계약은 `agent-platform/docs/APP_DELIVERY.md`와 `agent-platform/docs/DELIVERY_V2.md`에 있습니다.
+계약은 `agent-platform/docs/APP_DELIVERY.md`와 `agent-platform/docs/DELIVERY_RESOURCES.md`에 있습니다.
 
 | 리소스 | 용도 |
 | --- | --- |

@@ -1,5 +1,5 @@
 # Shared network objects for the RDS instances that kro RdsPostgres creates through ACK
-# (argocd-env-addons charts/kro, agent-platform docs/DELIVERY_V2.md). Each instance gets its own
+# (argocd-env-addons charts/kro, agent-platform docs/DELIVERY_RESOURCES.md). Each instance gets its own
 # DB identifier and master password; the subnet group and security group are shared and free.
 
 # The intra subnets of 2-vpc hold only these instances: no node or Pod has an address there, so the RdsPostgres

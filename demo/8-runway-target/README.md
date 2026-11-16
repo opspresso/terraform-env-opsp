@@ -1,6 +1,6 @@
 # 8-runway-target
 
-Agent Runway 환경의 `eb` target `demo-eb`가 쓰는 계정 리소스입니다. 한 target이 arm64와 amd64 instance를 모두 실행합니다. 설계는 agent-platform `docs/DELIVERY_V3.md`(D1·D2), 배포 workflow는
+Agent Runway 환경의 `eb` target `demo-eb`가 쓰는 계정 리소스입니다. 한 target이 arm64와 amd64 instance를 모두 실행합니다. 계약은 agent-platform `docs/APP_DELIVERY.md`의 target·외부 계정 절, 배포 workflow는
 argocd-env-projects `charts/delivery/files/app-deploy-eb.yaml`·`app-remove-eb.yaml`·`eb-stack.yaml`입니다.
 
 | 리소스 | 용도 |
