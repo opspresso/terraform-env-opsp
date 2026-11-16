@@ -1,5 +1,5 @@
 # Security group of the ElastiCache Serverless Valkey caches that kro ValkeyCache creates through ACK
-# (argocd-env-addons charts/kro, agent-platform docs/DELIVERY_V2.md). The caches use the intra subnets of 2-vpc,
+# (argocd-env-addons charts/kro, agent-platform docs/DELIVERY_RESOURCES.md). The caches use the intra subnets of 2-vpc,
 # like the RDS instances; each cache has its own user and password, and accepts TLS connections only.
 
 # Preserve the existing description; changing it forces security group replacement.
