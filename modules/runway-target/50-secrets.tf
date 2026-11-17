@@ -40,9 +40,9 @@ resource "aws_iam_role_policy" "secrets" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "TargetVariables"
-        Effect   = "Allow"
-        Action   = ["ssm:PutParameter", "ssm:GetParameters", "ssm:DeleteParameters"]
+        Sid    = "TargetVariables"
+        Effect = "Allow"
+        Action = ["ssm:PutParameter", "ssm:GetParameters", "ssm:DeleteParameters"]
         Resource = concat([for name in var.target_names : "arn:${local.partition}:ssm:${local.region}:${local.account_id}:parameter/agent-runway/${name}/*"],
         ["arn:${local.partition}:ssm:${local.region}:${local.account_id}:parameter/agent-runway/_runway/*"])
       },
