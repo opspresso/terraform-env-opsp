@@ -1,10 +1,10 @@
 variable "target_names" {
-  description = "The names of the eb targets that run in this account. Each name is the second segment of its Variables' SSM path /agent-runway/<name>/."
+  description = "The names of the Agent Runway environments whose machine (eb) target runs in this account. Each name is the second segment of its Variables' SSM path /agent-runway/<name>/."
   type        = list(string)
 
   validation {
     condition     = length(var.target_names) > 0 && alltrue([for name in var.target_names : can(regex("^[a-z][a-z0-9-]{1,30}$", name))])
-    error_message = "Give one or more eb target names that match ^[a-z][a-z0-9-]{1,30}$."
+    error_message = "Give one or more environment names that match ^[a-z][a-z0-9-]{1,30}$."
   }
 }
 
@@ -25,7 +25,7 @@ variable "runway_role_arn" {
 }
 
 variable "external_id" {
-  description = "The external ID that Agent Runway generated for the environment of this account (account.access.externalId). Null for a Target in Agent Runway's own account: then the deploy role needs no external ID and the module makes no secrets role."
+  description = "The external ID that Agent Runway generated for this account (account.access.externalId on the console's account page). Null for Agent Runway's own account: then the deploy role needs no external ID and the module makes no secrets role."
   type        = string
   default     = null
 
