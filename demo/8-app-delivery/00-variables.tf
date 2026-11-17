@@ -5,9 +5,9 @@ variable "region" {
 }
 
 variable "target_account_ids" {
-  description = "Agent Runway eb Target이 있는 다른 계정입니다. 그 계정의 앱 instance 역할이 `projects/*` 이미지를 pull합니다(terraform-env-two `two/8-runway-target`)."
+  description = "Agent Runway eb Target이 있는 다른 계정입니다. 그 계정의 앱 instance 역할이 `projects/*` 이미지를 pull합니다(terraform-env-two `two/8-runway-target`, terraform-env-dev `dev/8-runway-target`)."
   type        = list(string)
-  default     = ["552292899126"]
+  default     = ["552292899126", "208587068532"]
 
   validation {
     condition     = alltrue([for id in var.target_account_ids : can(regex("^[0-9]{12}$", id))])
@@ -22,7 +22,7 @@ variable "parent_zone" {
 }
 
 variable "target_domains" {
-  description = "다른 계정 eb Target의 앱 도메인과 그 계정 zone의 name server입니다. 값은 그 zone을 만든 root의 output `name_servers`입니다(terraform-env-two `two/3-domain`)."
+  description = "다른 계정 eb Target의 앱 도메인과 그 계정 zone의 name server입니다. 값은 그 zone을 만든 root의 output `name_servers`입니다(terraform-env-two `two/3-domain`, terraform-env-dev `dev/3-domain`)."
   type        = map(list(string))
   default = {
     "two.rovr.dev" = [
@@ -30,6 +30,12 @@ variable "target_domains" {
       "ns-1710.awsdns-21.co.uk",
       "ns-406.awsdns-50.com",
       "ns-833.awsdns-40.net",
+    ]
+    "dev.rovr.dev" = [
+      "ns-1464.awsdns-55.org",
+      "ns-1824.awsdns-36.co.uk",
+      "ns-507.awsdns-63.com",
+      "ns-914.awsdns-50.net",
     ]
   }
 
