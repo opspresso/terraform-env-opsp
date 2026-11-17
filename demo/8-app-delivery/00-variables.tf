@@ -16,13 +16,13 @@ variable "target_account_ids" {
 }
 
 variable "parent_zone" {
-  description = "다른 계정 eb Target의 앱 도메인을 위임하는 public Route53 zone입니다."
+  description = "다른 계정(Azure 구독 포함)의 machine target 앱 도메인을 위임하는 public Route53 zone입니다."
   type        = string
   default     = "rovr.dev"
 }
 
 variable "target_domains" {
-  description = "다른 계정 eb Target의 앱 도메인과 그 계정 zone의 name server입니다. 값은 그 zone을 만든 root의 output `name_servers`입니다(terraform-env-two `two/3-domain`, terraform-env-dev `dev/3-domain`)."
+  description = "다른 계정(Azure 구독 포함)의 machine target 앱 도메인과 그 zone의 name server입니다. 값은 그 zone을 만든 root의 output `name_servers`입니다(terraform-env-two `two/3-domain`, terraform-env-dev `dev/3-domain`, terraform-env-azure `dmz/3-domain`)."
   type        = map(list(string))
   default = {
     "two.rovr.dev" = [
@@ -36,6 +36,12 @@ variable "target_domains" {
       "ns-1824.awsdns-36.co.uk",
       "ns-507.awsdns-63.com",
       "ns-914.awsdns-50.net",
+    ]
+    "dmz.rovr.dev" = [
+      "ns1-04.azure-dns.com",
+      "ns2-04.azure-dns.net",
+      "ns3-04.azure-dns.org",
+      "ns4-04.azure-dns.info",
     ]
   }
 
