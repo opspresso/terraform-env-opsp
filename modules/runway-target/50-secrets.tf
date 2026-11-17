@@ -1,7 +1,9 @@
-# The secrets role of a Target in another account (agent-platform docs/APP_DELIVERY.md "외부 계정"): Agent Runway
-# assumes it with the environment's external ID and writes the Variables of this account's targets to SSM
-# /agent-runway/<target>/<slug>/<env>/ with the target's key. Its access check writes and deletes
-# /agent-runway/<target>/_runway/access-check. The instances read their own environment's path with their stack role.
+# The access role of an account other than Agent Runway's own (agent-platform docs/APP_DELIVERY.md "계정"): Agent
+# Runway assumes it with the account's external ID to list the account's choices for an environment (clusters, VPCs,
+# subnets, certificates, zones, Elastic Beanstalk platforms) and to write the Variables of this account's machine
+# environments to SSM /agent-runway/<environment>/<slug>/<environment>/ with the account's key. Its access check
+# writes and deletes /agent-runway/_runway/access-check. The instances read their own environment's path with their
+# stack role.
 resource "aws_iam_role" "secrets" {
   count = var.external_id == null ? 0 : 1
 
@@ -41,7 +43,21 @@ resource "aws_iam_role_policy" "secrets" {
         Sid      = "TargetVariables"
         Effect   = "Allow"
         Action   = ["ssm:PutParameter", "ssm:GetParameters", "ssm:DeleteParameters"]
-        Resource = [for name in var.target_names : "arn:${local.partition}:ssm:${local.region}:${local.account_id}:parameter/agent-runway/${name}/*"]
+        Resource = concat([for name in var.target_names : "arn:${local.partition}:ssm:${local.region}:${local.account_id}:parameter/agent-runway/${name}/*"],
+        ["arn:${local.partition}:ssm:${local.region}:${local.account_id}:parameter/agent-runway/_runway/*"])
+      },
+      {
+        # Read-only listings; none of these actions supports resource-level permissions.
+        Sid    = "AccountChoices"
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeRouteTables",
+          "eks:ListClusters", "eks:DescribeCluster",
+          "acm:ListCertificates",
+          "route53:ListHostedZones",
+          "elasticbeanstalk:ListAvailableSolutionStacks",
+        ]
+        Resource = "*"
       },
       {
         Sid       = "VariableKey"

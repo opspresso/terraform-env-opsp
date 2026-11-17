@@ -34,6 +34,21 @@
       }
     },
     {
+      "Sid": "AccountChoices",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeRouteTables",
+        "eks:ListClusters",
+        "eks:DescribeCluster",
+        "acm:ListCertificates",
+        "route53:ListHostedZones",
+        "elasticbeanstalk:ListAvailableSolutionStacks"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "TargetSecretsSession",
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
