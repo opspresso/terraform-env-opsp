@@ -1,0 +1,58 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:DescribeTimeToLive",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query"
+      ],
+      "Resource": [
+        "${table_arn}",
+        "${table_arn}/index/GSI1"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "${bucket_arn}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucketCors"
+      ],
+      "Resource": [
+        "${bucket_arn}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:PurgeQueue"
+      ],
+      "Resource": [
+        "${queue_arn}"
+      ]
+    }
+  ]
+}

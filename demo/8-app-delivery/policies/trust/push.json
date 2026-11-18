@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${registry_role_arn}"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringLike": {
+          "aws:RequestTag/delivery-project": "?*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${registry_role_arn}"
+      },
+      "Action": "sts:TagSession",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "delivery-project",
+            "eks-cluster-arn",
+            "eks-cluster-name",
+            "kubernetes-namespace",
+            "kubernetes-service-account",
+            "kubernetes-pod-name",
+            "kubernetes-pod-uid"
+          ]
+        }
+      }
+    }
+  ]
+}

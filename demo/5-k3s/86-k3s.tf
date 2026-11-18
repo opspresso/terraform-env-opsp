@@ -1,16 +1,9 @@
 # k3s 노드 — 기존에 생성된 EC2를 Terraform으로 가져와 관리한다.
 
 resource "aws_iam_role" "k3s" {
-  name        = "k3s-agent-studio-role"
-  description = "IAM role for the k3s agent-studio node"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
+  name               = "k3s-agent-studio-role"
+  description        = "IAM role for the k3s agent-studio node"
+  assume_role_policy = file("${path.module}/policies/trust/k3s.json")
 
   tags = {
     Name = "k3s-agent-studio-role"
@@ -166,26 +159,8 @@ resource "aws_iam_role_policy" "k3s_cert_manager_route53" {
   name = "cert-manager-route53-dns01"
   role = aws_iam_role.k3s.id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "ChangeK3sHostedZone"
-        Effect   = "Allow"
-        Action   = "route53:ChangeResourceRecordSets"
-        Resource = [for zone in var.cert_manager_zones : "arn:aws:route53:::hostedzone/${data.aws_route53_zone.k3s[zone].zone_id}"]
-      },
-      {
-        Sid    = "ReadRoute53ForDns01"
-        Effect = "Allow"
-        Action = [
-          "route53:GetChange",
-          "route53:ListHostedZonesByName",
-          "route53:ListResourceRecordSets",
-        ]
-        Resource = "*"
-      },
-    ]
+  policy = templatefile("${path.module}/policies/k3s-cert-manager-route53.json", {
+    hosted_zone_arns = [for zone in var.cert_manager_zones : "arn:aws:route53:::hostedzone/${data.aws_route53_zone.k3s[zone].zone_id}"]
   })
 }
 

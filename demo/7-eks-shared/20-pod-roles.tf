@@ -1,8 +1,9 @@
 resource "aws_iam_role" "this" {
   for_each = local.pod_identities
 
-  name               = format("%s--%s", local.prefix_name, each.key)
-  assume_role_policy = data.aws_iam_policy_document.pod_identity.json
+  name = format("%s--%s", local.prefix_name, each.key)
+  # Only EKS Pod Identity of this account can assume the roles.
+  assume_role_policy = templatefile("${path.module}/policies/trust/pod-identity.json", { account_id = local.account_id })
 
   tags = {
     Name = format("%s--%s", local.prefix_name, each.key)

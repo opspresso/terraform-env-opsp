@@ -1,0 +1,57 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BeanstalkBuckets",
+      "Effect": "Allow",
+      "Action": ["s3:Get*", "s3:List*", "s3:PutObject"],
+      "Resource": ["arn:${partition}:s3:::elasticbeanstalk-*", "arn:${partition}:s3:::elasticbeanstalk-*/*"]
+    },
+    {
+      "Sid": "BeanstalkLogs",
+      "Effect": "Allow",
+      "Action": ["logs:PutLogEvents", "logs:CreateLogStream", "logs:DescribeLogStreams", "logs:DescribeLogGroups"],
+      "Resource": "arn:${partition}:logs:*:${account_id}:log-group:/aws/elasticbeanstalk*"
+    },
+    {
+      "Sid": "BeanstalkHealth",
+      "Effect": "Allow",
+      "Action": ["elasticbeanstalk:PutInstanceStatistics"],
+      "Resource": [
+        "arn:${partition}:elasticbeanstalk:*:${account_id}:application/*",
+        "arn:${partition}:elasticbeanstalk:*:${account_id}:environment/*"
+      ]
+    },
+    {
+      "Sid": "Tracing",
+      "Effect": "Allow",
+      "Action": ["xray:PutTraceSegments", "xray:PutTelemetryRecords", "xray:GetSamplingRules", "xray:GetSamplingTargets", "xray:GetSamplingStatisticSummaries"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Variables",
+      "Effect": "Allow",
+      "Action": ["ssm:GetParameter", "ssm:GetParametersByPath"],
+      "Resource": ${jsonencode([for name in target_names : "arn:${partition}:ssm:${region}:${account_id}:parameter/agent-runway/${name}/*"])}
+    },
+    {
+      "Sid": "VariableKey",
+      "Effect": "Allow",
+      "Action": ["kms:Decrypt"],
+      "Resource": "${secrets_key_arn}",
+      "Condition": {"StringEquals": {"kms:ViaService": "ssm.${region}.amazonaws.com"}}
+    },
+    {
+      "Sid": "RegistryLogin",
+      "Effect": "Allow",
+      "Action": ["ecr:GetAuthorizationToken"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ProjectImages",
+      "Effect": "Allow",
+      "Action": ["ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer", "ecr:BatchCheckLayerAvailability"],
+      "Resource": "arn:${partition}:ecr:*:*:repository/projects/*"
+    }
+  ]
+}

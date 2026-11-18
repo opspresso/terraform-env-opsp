@@ -5,63 +5,20 @@
 # 값 목록으로 제한하면 새 환경의 SecretStore가 AssumeRole 403으로 실패하고 배포가 verify 단계에서 끝납니다.
 resource "aws_iam_role" "runway_tenant_secrets" {
   name = "agent-runway-tenant-secrets"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect    = "Allow"
-        Principal = { AWS = local.external_secrets_role_arn }
-        Action    = "sts:AssumeRole"
-        Condition = {
-          StringLike = {
-            "aws:RequestTag/delivery-project" = "?*"
-            "aws:RequestTag/delivery-env"     = "?*"
-          }
-        }
-      },
-      {
-        Effect    = "Allow"
-        Principal = { AWS = local.external_secrets_role_arn }
-        Action    = "sts:TagSession"
-        # EKS Pod Identity session tags are transitive, so a chained session carries them as well.
-        Condition = {
-          "ForAllValues:StringEquals" = { "aws:TagKeys" = concat(["delivery-project", "delivery-env"], local.pod_identity_tag_keys) }
-        }
-      },
-    ]
+  # EKS Pod Identity session tags are transitive, so a chained session carries them as well: sts:TagSession allows
+  # them next to delivery-project and delivery-env.
+  assume_role_policy = templatefile("${path.module}/policies/trust/runway-tenant-secrets.json", {
+    external_secrets_role_arn = local.external_secrets_role_arn
   })
 }
 
 resource "aws_iam_role_policy" "runway_tenant_secrets" {
   name = "variables"
   role = aws_iam_role.runway_tenant_secrets.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "NexusImagePullCredential"
-        Effect   = "Allow"
-        Action   = ["ssm:GetParameter", "ssm:GetParameters"]
-        Resource = "arn:aws:ssm:${var.region}:${local.account_id}:parameter/k8s/common/nexus/runway-reader-password"
-      },
-      {
-        Sid    = "OwnEnvironmentVariables"
-        Effect = "Allow"
-        Action = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
-        Resource = [
-          "arn:aws:ssm:${var.region}:${local.account_id}:parameter/agent-runway/${var.cluster_name}/$${aws:PrincipalTag/delivery-project}/$${aws:PrincipalTag/delivery-env}",
-          "arn:aws:ssm:${var.region}:${local.account_id}:parameter/agent-runway/${var.cluster_name}/$${aws:PrincipalTag/delivery-project}/$${aws:PrincipalTag/delivery-env}/*",
-        ]
-      },
-      {
-        Sid      = "DecryptVariables"
-        Effect   = "Allow"
-        Action   = "kms:Decrypt"
-        Resource = aws_kms_key.variables.arn
-        Condition = {
-          StringEquals = { "kms:ViaService" = "ssm.${var.region}.amazonaws.com" }
-        }
-      },
-    ]
+  policy = templatefile("${path.module}/policies/runway-tenant-secrets.json", {
+    account_id   = local.account_id
+    region       = var.region
+    cluster_name = var.cluster_name
+    kms_key_arn  = aws_kms_key.variables.arn
   })
 }

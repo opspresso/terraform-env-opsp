@@ -46,14 +46,6 @@ locals {
     for repository, publisher in local.github_ecr_publishers : repository =>
     "repo:opspresso@38965494/${repository}@${publisher.repository_id}"
   }
-  github_ecr_push_actions = [
-    "ecr:BatchCheckLayerAvailability",
-    "ecr:BatchGetImage",
-    "ecr:CompleteLayerUpload",
-    "ecr:InitiateLayerUpload",
-    "ecr:PutImage",
-    "ecr:UploadLayerPart",
-  ]
 }
 
 data "aws_iam_openid_connect_provider" "github" {
@@ -66,29 +58,16 @@ resource "aws_iam_role" "github_ecr" {
   name                 = "github--${each.key}-ecr"
   description          = each.value.description
   max_session_duration = 3600
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Federated = data.aws_iam_openid_connect_provider.github.arn }
-      Action    = "sts:AssumeRoleWithWebIdentity"
-      Condition = {
-        StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
-        StringLike = {
-          # Preserve the two imported roles' existing trust. New publishers only
-          # accept immutable repository subjects and v* release tags.
-          "token.actions.githubusercontent.com:sub" = each.value.legacy_trust ? [
-            "${local.github_ecr_subject_prefixes[each.key]}:ref:refs/tags/v*",
-            "${local.github_ecr_subject_prefixes[each.key]}:ref:refs/heads/main",
-            "repo:opspresso/${each.key}:ref:refs/tags/v*",
-            "repo:opspresso/${each.key}:ref:refs/heads/main",
-            ] : [
-            "${local.github_ecr_subject_prefixes[each.key]}:ref:refs/tags/v*",
-          ]
-        }
-      }
-    }]
-  })
+  # The two imported roles keep their existing trust. New publishers only accept immutable repository subjects and v*
+  # release tags.
+  assume_role_policy = templatefile(
+    "${path.module}/policies/trust/${each.value.legacy_trust ? "github-ecr-release-legacy" : "github-ecr-release"}.json",
+    {
+      oidc_provider_arn = data.aws_iam_openid_connect_provider.github.arn
+      subject_prefix    = local.github_ecr_subject_prefixes[each.key]
+      repository        = each.key
+    },
+  )
 
   tags = {
     Name      = "github--${each.key}-ecr"
@@ -101,17 +80,9 @@ resource "aws_iam_policy" "github_ecr" {
   for_each = { for repository, publisher in local.github_ecr_publishers : repository => publisher if repository != "agent-memory" }
 
   name = "github--${each.key}-ecr"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      { Effect = "Allow", Action = ["ecr:GetAuthorizationToken"], Resource = "*" },
-      {
-        Effect = "Allow"
-        # Forge verifies its published Sandbox by pulling and running that image.
-        Action   = each.key == "agent-forge" ? concat(local.github_ecr_push_actions, ["ecr:GetDownloadUrlForLayer"]) : local.github_ecr_push_actions
-        Resource = aws_ecr_repository.this[each.key].arn
-      },
-    ]
+  # Forge verifies its published Sandbox by pulling and running that image.
+  policy = templatefile("${path.module}/policies/${each.key == "agent-forge" ? "github-ecr-push-pull" : "github-ecr-push"}.json", {
+    repository_arn = aws_ecr_repository.this[each.key].arn
   })
 
   tags = {
@@ -133,16 +104,8 @@ resource "aws_iam_role_policy_attachment" "github_ecr" {
 resource "aws_iam_role_policy" "github_ecr_memory" {
   name = "ecr-push-agent-memory"
   role = aws_iam_role.github_ecr["agent-memory"].name
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      { Effect = "Allow", Action = "ecr:GetAuthorizationToken", Resource = "*" },
-      {
-        Effect   = "Allow"
-        Action   = concat(local.github_ecr_push_actions, ["ecr:GetDownloadUrlForLayer"])
-        Resource = aws_ecr_repository.this["agent-memory"].arn
-      },
-    ]
+  policy = templatefile("${path.module}/policies/github-ecr-push-pull.json", {
+    repository_arn = aws_ecr_repository.this["agent-memory"].arn
   })
 }
 

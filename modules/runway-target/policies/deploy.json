@@ -1,0 +1,75 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OwnStack",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateStack", "cloudformation:UpdateStack", "cloudformation:DeleteStack", "cloudformation:CreateChangeSet",
+        "cloudformation:ExecuteChangeSet", "cloudformation:DescribeChangeSet", "cloudformation:DeleteChangeSet",
+        "cloudformation:DescribeStacks", "cloudformation:DescribeStackEvents", "cloudformation:GetTemplateSummary"
+      ],
+      "Resource": "arn:${partition}:cloudformation:${region}:${account_id}:stack/${stack_name}/*"
+    },
+    {
+      "Sid": "Templates",
+      "Effect": "Allow",
+      "Action": ["cloudformation:ValidateTemplate", "cloudformation:GetTemplateSummary"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BoundedRoles",
+      "Effect": "Allow",
+      "Action": ["iam:CreateRole", "iam:PutRolePolicy", "iam:AttachRolePolicy", "iam:DeleteRolePolicy", "iam:DetachRolePolicy", "iam:PutRolePermissionsBoundary"],
+      "Resource": "arn:${partition}:iam::${account_id}:role/${stack_name}-*",
+      "Condition": {"StringEquals": {"iam:PermissionsBoundary": "${app_boundary_arn}"}}
+    },
+    {
+      "Sid": "StackRoles",
+      "Effect": "Allow",
+      "Action": ["iam:GetRole", "iam:GetRolePolicy", "iam:DeleteRole", "iam:TagRole", "iam:UntagRole", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies"],
+      "Resource": "arn:${partition}:iam::${account_id}:role/${stack_name}-*"
+    },
+    {
+      "Sid": "StackInstanceProfiles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile", "iam:GetInstanceProfile", "iam:AddRoleToInstanceProfile",
+        "iam:RemoveRoleFromInstanceProfile", "iam:TagInstanceProfile"
+      ],
+      "Resource": "arn:${partition}:iam::${account_id}:instance-profile/${stack_name}-*"
+    },
+    {
+      "Sid": "PassStackRoles",
+      "Effect": "Allow",
+      "Action": ["iam:PassRole"],
+      "Resource": ["arn:${partition}:iam::${account_id}:role/${stack_name}-*", "${service_role_arn}"],
+      "Condition": {"StringEquals": {"iam:PassedToService": ["ec2.amazonaws.com", "elasticbeanstalk.amazonaws.com"]}}
+    },
+    {
+      "Sid": "SourceBundles",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject"],
+      "Resource": "${artifact_bucket_arn}/$${aws:PrincipalTag/delivery-project}/$${aws:PrincipalTag/delivery-env}/*"
+    },
+    {
+      "Sid": "AppRecords",
+      "Effect": "Allow",
+      "Action": ["route53:ChangeResourceRecordSets", "route53:GetHostedZone", "route53:ListResourceRecordSets"],
+      "Resource": "arn:${partition}:route53:::hostedzone/${hosted_zone_id}",
+      "Condition": {"ForAllValues:StringLike": {"route53:ChangeResourceRecordSetsNormalizedRecordNames": [${jsonencode("*.${domain}")}]}}
+    },
+    {
+      "Sid": "RecordChanges",
+      "Effect": "Allow",
+      "Action": ["route53:GetChange"],
+      "Resource": "arn:${partition}:route53:::change/*"
+    },
+    {
+      "Sid": "LoadBalancerSecurityGroups",
+      "Effect": "Allow",
+      "Action": ["ec2:GetSecurityGroupsForVpc"],
+      "Resource": "*"
+    }
+  ]
+}

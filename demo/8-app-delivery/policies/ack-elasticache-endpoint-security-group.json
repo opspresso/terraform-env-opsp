@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ServerlessEndpointSecurityGroup",
+      "Effect": "Allow",
+      "Action": "ec2:CreateVpcEndpoint",
+      "Resource": "arn:aws:ec2:${region}:${account_id}:security-group/${security_group_id}"
+    }
+  ]
+}

@@ -70,36 +70,17 @@ resource "aws_s3_bucket_lifecycle_configuration" "runway_objects" {
 resource "aws_iam_role" "runway_sandbox_objects" {
   name                 = "agent-runway-sandbox-objects"
   max_session_duration = 3600
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { AWS = local.runway_role_arn }
-      # EKS Pod Identity session tags are transitive, so the chained session needs sts:TagSession.
-      Action = ["sts:AssumeRole", "sts:TagSession"]
-    }]
+  # EKS Pod Identity session tags are transitive, so the chained session needs sts:TagSession.
+  assume_role_policy = templatefile("${path.module}/policies/trust/runway-sandbox-objects.json", {
+    runway_role_arn = local.runway_role_arn
   })
 }
 
 resource "aws_iam_role_policy" "runway_sandbox_objects" {
   name = "objects"
   role = aws_iam_role.runway_sandbox_objects.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "ListTenantPrefixes"
-        Effect   = "Allow"
-        Action   = "s3:ListBucket"
-        Resource = aws_s3_bucket.runway_objects.arn
-      },
-      {
-        Sid      = "TenantObjects"
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"]
-        Resource = "${aws_s3_bucket.runway_objects.arn}/*"
-      },
-    ]
+  policy = templatefile("${path.module}/policies/runway-sandbox-objects.json", {
+    bucket_arn = aws_s3_bucket.runway_objects.arn
   })
 }
 
@@ -108,94 +89,24 @@ resource "aws_iam_role_policy" "runway_sandbox_objects" {
 # Pod Identity session tag로 자기 namespace prefix만 허용하므로 역할 하나를 모든 테넌트가 공유합니다.
 resource "aws_iam_role" "runway_tenant_objects" {
   name = "agent-runway-tenant-objects"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "pods.eks.amazonaws.com" }
-      Action    = ["sts:AssumeRole", "sts:TagSession"]
-      Condition = {
-        StringEquals = { "aws:SourceAccount" = local.account_id }
-        ArnEquals    = { "aws:SourceArn" = "arn:aws:eks:${var.region}:${local.account_id}:cluster/${var.cluster_name}" }
-      }
-    }]
+  assume_role_policy = templatefile("${path.module}/policies/trust/runway-tenant-objects.json", {
+    account_id   = local.account_id
+    region       = var.region
+    cluster_name = var.cluster_name
   })
 }
 
 resource "aws_iam_role_policy" "runway_tenant_objects" {
   name = "objects"
   role = aws_iam_role.runway_tenant_objects.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "ListOwnNamespace"
-        Effect   = "Allow"
-        Action   = "s3:ListBucket"
-        Resource = aws_s3_bucket.runway_objects.arn
-        Condition = {
-          StringLike = { "s3:prefix" = ["$${aws:PrincipalTag/eks-cluster-name}/$${aws:PrincipalTag/kubernetes-namespace}/*"] }
-        }
-      },
-      {
-        Sid      = "OwnNamespaceObjects"
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"]
-        Resource = "${aws_s3_bucket.runway_objects.arn}/$${aws:PrincipalTag/eks-cluster-name}/$${aws:PrincipalTag/kubernetes-namespace}/*"
-      },
-      # Dedicated buckets of kro S3Bucket (argocd-env-addons charts/kro): <cluster>-<hash>, tagged with the cluster and
-      # the instance namespace, with ABAC on. The name alone does not identify the namespace, so the bucket tags decide.
-      # Only kro and the ACK S3 controller set those tags; tenants cannot create Bucket objects or tag buckets.
-      {
-        Sid      = "OwnNamespaceBuckets"
-        Effect   = "Allow"
-        Action   = ["s3:ListBucket", "s3:ListBucketVersions", "s3:ListBucketMultipartUploads", "s3:GetBucketLocation"]
-        Resource = "arn:aws:s3:::$${aws:PrincipalTag/eks-cluster-name}-*"
-        Condition = {
-          StringEquals = {
-            # A bucket of the same name in another account (bucket names are global) never matches.
-            "aws:ResourceAccount"                  = local.account_id
-            "aws:ResourceTag/eks-cluster-name"     = "$${aws:PrincipalTag/eks-cluster-name}"
-            "aws:ResourceTag/kubernetes-namespace" = "$${aws:PrincipalTag/kubernetes-namespace}"
-          }
-          Bool = { "aws:SecureTransport" = "true" }
-        }
-      },
-      {
-        Sid    = "OwnNamespaceBucketObjects"
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject", "s3:GetObjectVersion", "s3:PutObject", "s3:DeleteObject", "s3:DeleteObjectVersion",
-          "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts",
-        ]
-        Resource = "arn:aws:s3:::$${aws:PrincipalTag/eks-cluster-name}-*/*"
-        Condition = {
-          StringEquals = {
-            # A bucket of the same name in another account (bucket names are global) never matches.
-            "aws:ResourceAccount"                  = local.account_id
-            "aws:ResourceTag/eks-cluster-name"     = "$${aws:PrincipalTag/eks-cluster-name}"
-            "aws:ResourceTag/kubernetes-namespace" = "$${aws:PrincipalTag/kubernetes-namespace}"
-          }
-          Bool = { "aws:SecureTransport" = "true" }
-        }
-      },
-      # Dedicated tables of kro DynamoTable (argocd-env-addons charts/kro): app-<hash>, tagged like the buckets above.
-      # Only kro and the ACK DynamoDB controller set those tags; tenants cannot create Table objects or tag tables.
-      {
-        Sid    = "OwnNamespaceTables"
-        Effect = "Allow"
-        Action = [
-          "dynamodb:DescribeTable", "dynamodb:GetItem", "dynamodb:BatchGetItem", "dynamodb:Query", "dynamodb:Scan",
-          "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem", "dynamodb:BatchWriteItem", "dynamodb:ConditionCheckItem",
-        ]
-        Resource = "arn:aws:dynamodb:${var.region}:${local.account_id}:table/app-*"
-        Condition = {
-          StringEquals = {
-            "aws:ResourceTag/eks-cluster-name"     = "$${aws:PrincipalTag/eks-cluster-name}"
-            "aws:ResourceTag/kubernetes-namespace" = "$${aws:PrincipalTag/kubernetes-namespace}"
-          }
-        }
-      },
-    ]
+  # Dedicated buckets of kro S3Bucket (argocd-env-addons charts/kro) are <cluster>-<hash>, tagged with the cluster and the
+  # instance namespace, with ABAC on. The name alone does not identify the namespace, so the bucket tags decide, and
+  # aws:ResourceAccount keeps a bucket of the same name in another account (bucket names are global) from matching.
+  # Dedicated tables of kro DynamoTable are app-<hash>, tagged like the buckets. Only kro and the ACK S3 and DynamoDB
+  # controllers set those tags; tenants cannot create Bucket or Table objects or tag the resources.
+  policy = templatefile("${path.module}/policies/runway-tenant-objects.json", {
+    bucket_arn = aws_s3_bucket.runway_objects.arn
+    account_id = local.account_id
+    region     = var.region
   })
 }

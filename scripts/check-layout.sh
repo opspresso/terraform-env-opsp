@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks the file layout rules in README.md ("Terraform 작성 규칙") for every root under demo/.
+# Checks the file layout and IAM policy rules in README.md ("Terraform 작성 규칙") for every root under demo/.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -21,6 +21,22 @@ only_blocks() {
   while IFS= read -r line; do
     err "$file" "unexpected block: $line"
   done < <(grep -E '^[a-z_]+ .*\{' "$file" | grep -vE "$pattern" || true)
+}
+
+# iam_policies <dir>: IAM policy documents live in JSON files under policies/ and are read with file() or templatefile().
+iam_policies() {
+  local dir="$1" findings location line
+  findings="$(awk '
+    /^resource "aws_iam_(role|policy|role_policy|user_policy|group_policy)" / { iam = 1 }
+    /^}/ { iam = 0 }
+    /^data "aws_iam_policy_document" / || (iam && /^  (assume_role_)?policy *= / && !/^  (assume_role_)?policy *= *(file|templatefile)\(/) {
+      print FILENAME ",line=" FNR "\t" $0
+    }
+  ' "$dir"/*.tf)" || { err "$dir" "IAM policy scan failed"; return; }
+  while IFS=$'\t' read -r location line; do
+    [[ -n "$location" ]] || continue
+    err "$location" "IAM policy belongs in policies/*.json, read with file() or templatefile(): $line"
+  done <<<"$findings"
 }
 
 for root in demo/*/; do
@@ -46,6 +62,7 @@ for root in demo/*/; do
   only_blocks "$root/00-variables.tf" '^variable "'
   only_blocks "$root/02-backend.tf" '^(terraform|provider "[^"]+") \{'
   only_blocks "$root/02-remote-state.tf" '^data "terraform_remote_state" '
+  iam_policies "$root"
 done
 
 # Modules under modules/ use the same file names. The calling root pins the versions and configures the backend and
@@ -66,6 +83,7 @@ for module in modules/*/; do
   done < <(grep -lE '^provider "|^  backend "' "$module"/*.tf || true)
   only_blocks "$module/00-variables.tf" '^variable "'
   only_blocks "$module/02-versions.tf" '^terraform \{'
+  iam_policies "$module"
 done
 
 exit "$fail"

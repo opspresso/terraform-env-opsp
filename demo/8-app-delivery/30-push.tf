@@ -4,56 +4,18 @@
 resource "aws_iam_role" "push" {
   name                 = "app-delivery-push"
   max_session_duration = 3600
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect    = "Allow"
-        Principal = { AWS = local.registry_role_arn }
-        Action    = "sts:AssumeRole"
-        Condition = {
-          StringLike = { "aws:RequestTag/delivery-project" = "?*" }
-        }
-      },
-      {
-        Effect    = "Allow"
-        Principal = { AWS = local.registry_role_arn }
-        Action    = "sts:TagSession"
-        # EKS Pod Identity session tags are transitive, so a chained session carries them as well.
-        Condition = {
-          "ForAllValues:StringEquals" = { "aws:TagKeys" = concat(["delivery-project"], local.pod_identity_tag_keys) }
-        }
-      },
-    ]
+  # EKS Pod Identity session tags are transitive, so a chained session carries them as well: sts:TagSession allows
+  # them next to delivery-project.
+  assume_role_policy = templatefile("${path.module}/policies/trust/push.json", {
+    registry_role_arn = local.registry_role_arn
   })
 }
 
 resource "aws_iam_role_policy" "push" {
   name = "project-repository"
   role = aws_iam_role.push.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "RegistryLogin"
-        Effect   = "Allow"
-        Action   = "ecr:GetAuthorizationToken"
-        Resource = "*"
-      },
-      {
-        Sid    = "OwnProjectRepository"
-        Effect = "Allow"
-        Action = [
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:BatchGetImage",
-          "ecr:CompleteLayerUpload",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:InitiateLayerUpload",
-          "ecr:PutImage",
-          "ecr:UploadLayerPart",
-        ]
-        Resource = "arn:aws:ecr:${var.region}:${local.account_id}:repository/projects/$${aws:PrincipalTag/delivery-project}"
-      },
-    ]
+  policy = templatefile("${path.module}/policies/push.json", {
+    account_id = local.account_id
+    region     = var.region
   })
 }
