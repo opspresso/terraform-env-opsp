@@ -13,6 +13,7 @@ locals {
   # 30 인 것은 릴리스 빈도 때문입니다 — 하루 네댓 번 나가므로 10 은 사흘치 롤백 창밖에
   # 되지 않습니다.
   ecr_repositories = {
+    "agentops"        = { keep_releases = 30, release_tag_prefixes = ["v"] }
     "agent-runway"    = { keep_releases = 30, release_tag_prefixes = ["v"] }
     "agent-forge"     = { keep_releases = 30, release_tag_prefixes = ["v", "sandbox-v"] }
     "agent-knowledge" = { keep_releases = 30, release_tag_prefixes = ["v"] }
