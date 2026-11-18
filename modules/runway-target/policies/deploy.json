@@ -57,7 +57,7 @@
       "Effect": "Allow",
       "Action": ["route53:ChangeResourceRecordSets", "route53:GetHostedZone", "route53:ListResourceRecordSets"],
       "Resource": "arn:${partition}:route53:::hostedzone/${hosted_zone_id}",
-      "Condition": {"ForAllValues:StringLike": {"route53:ChangeResourceRecordSetsNormalizedRecordNames": ["*.${domain}"]}}
+      "Condition": {"ForAllValues:StringLike": {"route53:ChangeResourceRecordSetsNormalizedRecordNames": [${jsonencode("*.${domain}")}]}}
     },
     {
       "Sid": "RecordChanges",
