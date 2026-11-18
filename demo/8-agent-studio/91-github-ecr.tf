@@ -31,6 +31,11 @@ locals {
       description   = "agent-models release ECR push from GitHub Actions OIDC"
       legacy_trust  = false
     }
+    agentops = {
+      repository_id = "1462895516"
+      description   = "agentops release ECR push from GitHub Actions OIDC"
+      legacy_trust  = false
+    }
     rovr = {
       repository_id = "1438204517"
       description   = "rovr release ECR push from GitHub Actions OIDC"
