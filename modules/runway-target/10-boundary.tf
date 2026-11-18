@@ -7,58 +7,11 @@
 resource "aws_iam_policy" "app_boundary" {
   name        = "agent-runway-app-boundary"
   description = "Upper limit of the instance roles of Agent Runway Target stacks"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "BeanstalkBuckets"
-        Effect   = "Allow"
-        Action   = ["s3:Get*", "s3:List*", "s3:PutObject"]
-        Resource = ["arn:${local.partition}:s3:::elasticbeanstalk-*", "arn:${local.partition}:s3:::elasticbeanstalk-*/*"]
-      },
-      {
-        Sid      = "BeanstalkLogs"
-        Effect   = "Allow"
-        Action   = ["logs:PutLogEvents", "logs:CreateLogStream", "logs:DescribeLogStreams", "logs:DescribeLogGroups"]
-        Resource = "arn:${local.partition}:logs:*:${local.account_id}:log-group:/aws/elasticbeanstalk*"
-      },
-      {
-        Sid      = "BeanstalkHealth"
-        Effect   = "Allow"
-        Action   = ["elasticbeanstalk:PutInstanceStatistics"]
-        Resource = ["arn:${local.partition}:elasticbeanstalk:*:${local.account_id}:application/*", "arn:${local.partition}:elasticbeanstalk:*:${local.account_id}:environment/*"]
-      },
-      {
-        Sid      = "Tracing"
-        Effect   = "Allow"
-        Action   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords", "xray:GetSamplingRules", "xray:GetSamplingTargets", "xray:GetSamplingStatisticSummaries"]
-        Resource = "*"
-      },
-      {
-        Sid      = "Variables"
-        Effect   = "Allow"
-        Action   = ["ssm:GetParameter", "ssm:GetParametersByPath"]
-        Resource = [for name in var.target_names : "arn:${local.partition}:ssm:${local.region}:${local.account_id}:parameter/agent-runway/${name}/*"]
-      },
-      {
-        Sid       = "VariableKey"
-        Effect    = "Allow"
-        Action    = ["kms:Decrypt"]
-        Resource  = var.secrets_key_arn
-        Condition = { StringEquals = { "kms:ViaService" = "ssm.${local.region}.amazonaws.com" } }
-      },
-      {
-        Sid      = "RegistryLogin"
-        Effect   = "Allow"
-        Action   = ["ecr:GetAuthorizationToken"]
-        Resource = "*"
-      },
-      {
-        Sid      = "ProjectImages"
-        Effect   = "Allow"
-        Action   = ["ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer", "ecr:BatchCheckLayerAvailability"]
-        Resource = "arn:${local.partition}:ecr:*:*:repository/projects/*"
-      },
-    ]
+  policy = templatefile("${path.module}/policies/app-boundary.json", {
+    partition       = local.partition
+    region          = local.region
+    account_id      = local.account_id
+    target_names    = var.target_names
+    secrets_key_arn = var.secrets_key_arn
   })
 }

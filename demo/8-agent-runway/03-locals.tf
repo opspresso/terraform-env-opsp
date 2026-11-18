@@ -4,8 +4,6 @@ locals {
   runway_role_arn           = "arn:aws:iam::${local.account_id}:role/pod-role--agent-runway"
   external_secrets_role_arn = "arn:aws:iam::${local.account_id}:role/pod-role--external-secrets"
 
-  # Session tags that EKS Pod Identity adds to every credential; they are transitive.
-  pod_identity_tag_keys = ["eks-cluster-arn", "eks-cluster-name", "kubernetes-namespace", "kubernetes-service-account", "kubernetes-pod-name", "kubernetes-pod-uid"]
 
   tags = {
     Environment = "demo"

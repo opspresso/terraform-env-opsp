@@ -1,0 +1,98 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListOwnNamespace",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "${bucket_arn}",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "$${aws:PrincipalTag/eks-cluster-name}/$${aws:PrincipalTag/kubernetes-namespace}/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "OwnNamespaceObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": "${bucket_arn}/$${aws:PrincipalTag/eks-cluster-name}/$${aws:PrincipalTag/kubernetes-namespace}/*"
+    },
+    {
+      "Sid": "OwnNamespaceBuckets",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:ListBucketVersions",
+        "s3:ListBucketMultipartUploads",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "arn:aws:s3:::$${aws:PrincipalTag/eks-cluster-name}-*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceAccount": "${account_id}",
+          "aws:ResourceTag/eks-cluster-name": "$${aws:PrincipalTag/eks-cluster-name}",
+          "aws:ResourceTag/kubernetes-namespace": "$${aws:PrincipalTag/kubernetes-namespace}"
+        },
+        "Bool": {
+          "aws:SecureTransport": "true"
+        }
+      }
+    },
+    {
+      "Sid": "OwnNamespaceBucketObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:DeleteObjectVersion",
+        "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": "arn:aws:s3:::$${aws:PrincipalTag/eks-cluster-name}-*/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceAccount": "${account_id}",
+          "aws:ResourceTag/eks-cluster-name": "$${aws:PrincipalTag/eks-cluster-name}",
+          "aws:ResourceTag/kubernetes-namespace": "$${aws:PrincipalTag/kubernetes-namespace}"
+        },
+        "Bool": {
+          "aws:SecureTransport": "true"
+        }
+      }
+    },
+    {
+      "Sid": "OwnNamespaceTables",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem"
+      ],
+      "Resource": "arn:aws:dynamodb:${region}:${account_id}:table/app-*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/eks-cluster-name": "$${aws:PrincipalTag/eks-cluster-name}",
+          "aws:ResourceTag/kubernetes-namespace": "$${aws:PrincipalTag/kubernetes-namespace}"
+        }
+      }
+    }
+  ]
+}

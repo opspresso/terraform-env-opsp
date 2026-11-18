@@ -1,0 +1,56 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OtherApplications",
+      "Effect": "Deny",
+      "Action": [
+        "elasticbeanstalk:CreateApplication", "elasticbeanstalk:UpdateApplication", "elasticbeanstalk:DeleteApplication",
+        "elasticbeanstalk:UpdateApplicationResourceLifecycle", "elasticbeanstalk:CreateApplicationVersion",
+        "elasticbeanstalk:UpdateApplicationVersion", "elasticbeanstalk:DeleteApplicationVersion",
+        "elasticbeanstalk:CreateEnvironment", "elasticbeanstalk:UpdateEnvironment", "elasticbeanstalk:TerminateEnvironment",
+        "elasticbeanstalk:RebuildEnvironment", "elasticbeanstalk:RestartAppServer", "elasticbeanstalk:SwapEnvironmentCNAMEs",
+        "elasticbeanstalk:AbortEnvironmentUpdate", "elasticbeanstalk:ApplyEnvironmentManagedAction",
+        "elasticbeanstalk:ComposeEnvironments", "elasticbeanstalk:AssociateEnvironmentOperationsRole",
+        "elasticbeanstalk:DisassociateEnvironmentOperationsRole", "elasticbeanstalk:CreateConfigurationTemplate",
+        "elasticbeanstalk:UpdateConfigurationTemplate", "elasticbeanstalk:DeleteConfigurationTemplate",
+        "elasticbeanstalk:DeleteEnvironmentConfiguration", "elasticbeanstalk:AddTags", "elasticbeanstalk:RemoveTags",
+        "elasticbeanstalk:UpdateTagsForResource"
+      ],
+      "NotResource": [
+        "arn:${partition}:elasticbeanstalk:${region}:${account_id}:application/${stack_name}",
+        "arn:${partition}:elasticbeanstalk:${region}:${account_id}:applicationversion/${stack_name}/*",
+        "arn:${partition}:elasticbeanstalk:${region}:${account_id}:environment/${stack_name}/*",
+        "arn:${partition}:elasticbeanstalk:${region}:${account_id}:configurationtemplate/${stack_name}/*",
+        "arn:${partition}:elasticbeanstalk:${region}::solutionstack/*",
+        "arn:${partition}:elasticbeanstalk:${region}::platform/*"
+      ]
+    },
+    {
+      "Sid": "OtherRoles",
+      "Effect": "Deny",
+      "Action": ["iam:PassRole"],
+      "NotResource": ["arn:${partition}:iam::${account_id}:role/${stack_name}-*", "${service_role_arn}"]
+    },
+    {
+      "Sid": "OtherProjectResources",
+      "Effect": "Deny",
+      "Action": ["ec2:*", "autoscaling:*", "elasticloadbalancing:*", "cloudformation:*", "cloudwatch:*"],
+      "Resource": "*",
+      "Condition": {
+        "Null": {"aws:ResourceTag/opspresso.com/delivery-project": "false"},
+        "StringNotEquals": {"aws:ResourceTag/opspresso.com/delivery-project": "$${aws:PrincipalTag/delivery-project}"}
+      }
+    },
+    {
+      "Sid": "OtherEnvironmentResources",
+      "Effect": "Deny",
+      "Action": ["ec2:*", "autoscaling:*", "elasticloadbalancing:*", "cloudformation:*", "cloudwatch:*"],
+      "Resource": "*",
+      "Condition": {
+        "Null": {"aws:ResourceTag/opspresso.com/delivery-env": "false"},
+        "StringNotEquals": {"aws:ResourceTag/opspresso.com/delivery-env": "$${aws:PrincipalTag/delivery-env}"}
+      }
+    }
+  ]
+}

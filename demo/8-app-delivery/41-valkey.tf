@@ -36,13 +36,9 @@ resource "aws_iam_role_policy" "ack_elasticache_endpoint_security_group" {
   name = "valkey-endpoint-security-group"
   role = "pod-role--ack-elasticache"
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Sid      = "ServerlessEndpointSecurityGroup"
-      Effect   = "Allow"
-      Action   = "ec2:CreateVpcEndpoint"
-      Resource = "arn:aws:ec2:${var.region}:${local.account_id}:security-group/${aws_security_group.valkey.id}"
-    }]
+  policy = templatefile("${path.module}/policies/ack-elasticache-endpoint-security-group.json", {
+    account_id        = local.account_id
+    region            = var.region
+    security_group_id = aws_security_group.valkey.id
   })
 }

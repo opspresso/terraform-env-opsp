@@ -4,9 +4,9 @@
 
 | 파일 | 내용 |
 | --- | --- |
-| `20-pod-roles.tf`, `policies/` | Pod Identity 역할 `pod-role--<key>`와 정책. 키 목록은 `03-locals.tf`의 `pod_identities` |
+| `20-pod-roles.tf`, `policies/<key>.json`, `policies/trust/pod-identity.json` | Pod Identity 역할 `pod-role--<key>`와 정책. 키 목록은 `03-locals.tf`의 `pod_identities` |
 | `30-pod-identity.tf` | 위 역할과 ServiceAccount를 잇는 `eks-demo` association |
-| `40-github-roles.tf` | opspresso 저장소 CI가 assume하는 GitHub Actions 역할 |
+| `40-github-roles.tf`, `policies/github-*.json`, `policies/trust/github-*.json` | opspresso 저장소 CI가 assume하는 GitHub Actions 역할 |
 | `60-`~`65-*.tf` | 전용 NodeClass·NodePool |
 
 역할 이름은 다른 root와 서비스가 이름으로 참조한다(예: `pod-role--agent-runway`, `pod-role--delivery-target`). 이름을 바꾸지 않는다.

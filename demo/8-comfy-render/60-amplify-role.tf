@@ -1,28 +1,13 @@
 # IAM — Amplify SSR compute role
 
-data "aws_iam_policy_document" "amplify_assume" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["amplify.amazonaws.com"]
-    }
-
-    condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
-      values = [
-        format("arn:aws:amplify:%s:%s:apps/%s/*", var.region, local.account_id, local.amplify_app_id),
-      ]
-    }
-  }
-}
-
 resource "aws_iam_role" "amplify_compute" {
-  name               = "comfy-render-dev-amplify-compute"
-  description        = "SSR compute role assumed by the Amplify-hosted app for DynamoDB/S3/SQS access."
-  assume_role_policy = data.aws_iam_policy_document.amplify_assume.json
+  name        = "comfy-render-dev-amplify-compute"
+  description = "SSR compute role assumed by the Amplify-hosted app for DynamoDB/S3/SQS access."
+  assume_role_policy = templatefile("${path.module}/policies/trust/amplify-compute.json", {
+    region         = var.region
+    account_id     = local.account_id
+    amplify_app_id = local.amplify_app_id
+  })
 
   tags = {
     Name = "comfy-render-dev-amplify-compute"

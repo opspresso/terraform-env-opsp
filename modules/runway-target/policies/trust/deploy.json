@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {"AWS": "${target_step_role_arn}"},
+      "Action": "sts:AssumeRole",
+      "Condition": {
+%{ if external_id != null ~}
+        "StringEquals": {"sts:ExternalId": ${jsonencode(external_id)}},
+%{ endif ~}
+        "StringLike": {
+          "aws:RequestTag/delivery-project": "?*",
+          "aws:RequestTag/delivery-env": "?*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {"AWS": "${target_step_role_arn}"},
+      "Action": "sts:TagSession",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": ["delivery-project", "delivery-env", "eks-cluster-arn", "eks-cluster-name", "kubernetes-namespace", "kubernetes-service-account", "kubernetes-pod-name", "kubernetes-pod-uid"]
+        }
+      }
+    }
+  ]
+}
