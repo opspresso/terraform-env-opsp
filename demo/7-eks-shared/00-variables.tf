@@ -27,3 +27,13 @@ variable "rovr_sandbox_max_pods" {
     error_message = "rovr_sandbox_max_pods must be an integer between 1 and 60."
   }
 }
+
+variable "delivery_build_ephemeral_storage_gib" {
+  description = "Encrypted Auto Mode node disk of the delivery build NodePools. A large kaniko build uses 30 to 60Gi. The kubelet keeps about 10% of the disk, and the rest must exceed the build step's 150Gi limit."
+  type        = number
+  default     = 200
+  validation {
+    condition     = var.delivery_build_ephemeral_storage_gib >= 180 && var.delivery_build_ephemeral_storage_gib <= 1000 && floor(var.delivery_build_ephemeral_storage_gib) == var.delivery_build_ephemeral_storage_gib
+    error_message = "delivery_build_ephemeral_storage_gib must be an integer between 180 and 1000."
+  }
+}
