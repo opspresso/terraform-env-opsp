@@ -22,7 +22,7 @@ EKS 관리형 default NodeClass·NodePool은 변경하지 않는다.
 | --- | --- |
 | `workspaces` | Agent Forge Sandbox Job(Workspace) |
 | `rovr-sandboxes` | rovr sub-agent run |
-| `delivery-amd64` | Agent Runway Release의 `linux/amd64` build |
+| `delivery-amd64`, `delivery-arm64` | Agent Runway Release의 컨테이너 build(`linux/amd64`, `linux/arm64`) |
 
 Workspace pool은 기존 Auto Mode node 역할과 private subnet·EKS primary security group을 재사용한다.
 `workspaces` NodeClass는 암호화된 160Gi ephemeral disk, `DefaultDeny`와 network policy event log를 사용한다.
@@ -39,8 +39,13 @@ rovr 실행 Pod만 받는다. 실행 Pod는 2 CPU·4Gi를 요청하므로 8-CPU 
 이 값은 `argocd-env-apps`의 `env/eks-demo.yaml` `rovr.sandbox.max_runs`와 같게 유지한다.
 실행 Pod는 `karpenter.sh/do-not-disrupt`를 달고, 노드 drain은 rovr sandbox 마감(90분)까지 기다린다. Spot 회수는 2분 예고 뒤 실행 중인 run을 중단시킨다.
 
-`delivery-amd64` pool은 Agent Runway Release의 amd64 image를 native로 build한다(argocd-env-projects `charts/delivery`
-`files/app-build-v2.yaml`). 다른 NodePool은 모두 arm64다. taint `opspresso.com/delivery-build`로 `app-build-v2`의 `build` step만 받고,
-build가 없으면 비어 있다. Spot만 쓰므로 Spot 회수는 실행 중인 Release build를 실패시킨다.
+`delivery-amd64`·`delivery-arm64` pool은 Agent Runway Release의 컨테이너 image를 그 architecture에서 native로 build한다(argocd-env-projects `charts/delivery`
+`files/app-build-v2.yaml`). `build` step은 nodeSelector `karpenter.sh/nodepool: delivery-<arch>`로 이 pool만 쓴다.
+taint `opspresso.com/delivery-build`는 `app-build-v2`의 step만 허용하고, build가 없으면 pool은 비어 있다(`WhenEmpty` 10분).
+두 pool은 NodeClass `delivery-build`를 쓴다. 기본 NodeClass와 같은 node 역할·subnet·security group을 쓰고, ephemeral disk만 200Gi(`delivery_build_ephemeral_storage_gib`)다.
+kaniko가 Dockerfile의 `RUN`을 build 컨테이너 안에서 실행하므로 build 파일과 layer snapshot이 노드 디스크에 쌓인다. 큰 build(예: Elasticsearch)는 30~60Gi를 쓰고, step의 디스크 요청은 20Gi, 한도는 150Gi다.
+`delivery-arm64`는 8-CPU m·r 노드(32Gi 이상)이고 한도는 노드 4대(CPU 32개·메모리 256Gi)다. `delivery-amd64`는 4·8-CPU m·c·r 노드이고 한도는 CPU 16개·메모리 128Gi다.
+build Pod는 `karpenter.sh/do-not-disrupt`를 달고, 노드 drain은 build step 마감(2시간)과 정리 시간을 더한 130분까지 기다린다.
+Spot만 쓰므로 Spot 회수는 실행 중인 build를 중단시키고, step은 다른 노드에서 처음부터 다시 실행한다.
 
 공유 Agent PostgreSQL과 다른 중요 서비스는 terraform-env-demo `demo/6-eks-node`의 on-demand `core-2a`·`core-2c` NodePool에서 실행한다.
