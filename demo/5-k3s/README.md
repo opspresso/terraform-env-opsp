@@ -7,7 +7,7 @@ state(`backend/demo/k3s-demo/terraform.tfstate`)는 비어 있다.
 | 파일 | 내용 |
 | --- | --- |
 | `86-k3s.tf` | EC2(m6i.xlarge, AL2023, gp3 120Gi), IAM role·instance profile, security group, `*.<ingress_domain>` 레코드(기본 `*.demo.opsp.dev`), Pod용 정책 연결 |
-| `85-k3s-iam.tf` | ECR pull(`var.ecr_repositories`)·`/k8s/common/*` SSM 읽기 정책 |
+| `85-k3s-iam.tf` | ECR pull(`var.ecr_repositories`) 정책 |
 | `87-k3s-resources.tf`, `configure-k3s-resources.sh` | k3s Go 메모리 목표·kubelet image GC를 매일 반영하는 SSM association |
 | `bootstrap-k3s.sh` | 최초 설치 user_data |
 
