@@ -47,7 +47,7 @@ variable "hosted_zone_id" {
 }
 
 variable "secrets_key_arn" {
-  description = "The KMS key of the SecureString Variables of this account's targets."
+  description = "The KMS key of the Secrets Manager Variables of this account's targets."
   type        = string
 }
 
