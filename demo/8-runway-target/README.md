@@ -11,8 +11,8 @@ argocd-env-projects `charts/delivery/files/app-deploy-eb.yaml`·`app-remove-eb.y
 | S3 bucket `agent-runway-demo-eb-<account>` | source bundle `<project>/<environment>/<Deployment ID>.zip`. 비밀 값은 없다. 90일 뒤 만료된다 |
 
 리소스는 module `modules/runway-target`(module `target`)이 만든다. 다른 계정의 target(terraform-env-two `two/8-runway-target`)도 같은 module을 commit SHA로 고정해 쓴다.
-Java SE·Tomcat 플랫폼의 환경 secret 참조에는 `ssm:GetParameter`를 허용한다. 실제 instance 정책은 자기 환경의
-개별 SSM 파라미터 ARN으로 더 좁힌다. 기존 Docker 플랫폼의 `GetParametersByPath` 상한은 이전 환경을 위해 유지한다.
+환경 secret 참조에는 `secretsmanager:GetSecretValue`를 허용한다. 실제 instance 정책은 자기 환경의
+Secrets Manager 경로 `/agent-runway/<target 이름>/<project>/<environment>/*`로 더 좁힌다.
 이 target은 Agent Runway와 같은 계정에 있으므로 external ID가 없고 secrets 역할을 만들지 않는다. module로 옮길 때 `10-target.tf`의 `moved` 블록이
 기존 리소스의 state 주소만 옮겼다(교체 없음).
 

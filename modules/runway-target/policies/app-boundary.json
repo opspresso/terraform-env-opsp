@@ -31,15 +31,15 @@
     {
       "Sid": "Variables",
       "Effect": "Allow",
-      "Action": ["ssm:GetParameter", "ssm:GetParametersByPath"],
-      "Resource": ${jsonencode([for name in target_names : "arn:${partition}:ssm:${region}:${account_id}:parameter/agent-runway/${name}/*"])}
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Resource": ${jsonencode([for name in target_names : "arn:${partition}:secretsmanager:${region}:${account_id}:secret:/agent-runway/${name}/*"])}
     },
     {
       "Sid": "VariableKey",
       "Effect": "Allow",
       "Action": ["kms:Decrypt"],
       "Resource": "${secrets_key_arn}",
-      "Condition": {"StringEquals": {"kms:ViaService": "ssm.${region}.amazonaws.com"}}
+      "Condition": {"StringEquals": {"kms:ViaService": "secretsmanager.${region}.amazonaws.com"}}
     },
     {
       "Sid": "RegistryLogin",

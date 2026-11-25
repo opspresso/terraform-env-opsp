@@ -1,7 +1,7 @@
 # The permissions boundary of every role a Runway stack creates (argocd-env-projects charts/delivery
 # files/eb-stack.yaml InstanceRole). The deploy role may create roles only with this boundary, so a stack can never
 # grant an instance more than this: the Elastic Beanstalk web tier, Agent Runway Variables and Project images.
-# The stack's own policy narrows it to one environment's SSM path and one Project repository. The repositories are in
+# The stack's own policy narrows it to one environment's Secrets Manager path and one Project repository. The repositories are in
 # the management account; a Target in another account also needs the management registry's policy to allow the pull
 # (demo/8-app-delivery).
 resource "aws_iam_policy" "app_boundary" {

@@ -11,13 +11,13 @@ variable "management_account_id" {
 }
 
 variable "target_name" {
-  description = "The name of the eb target of the Agent Runway environments in this account. It is also the second segment of the Variables' SSM path."
+  description = "The name of the eb target of the Agent Runway environments in this account. It is also the second segment of the Variables' Secrets Manager path."
   type        = string
   default     = "demo-eb"
 }
 
 variable "amd64_target_name" {
-  description = "A second eb target name that an environment of this account may use. Instances read its Variables' SSM path too."
+  description = "A second eb target name that an environment of this account may use. Instances read its Variables' Secrets Manager path too."
   type        = string
   default     = "demo-eb-amd64"
 }
