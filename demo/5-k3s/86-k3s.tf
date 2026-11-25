@@ -145,11 +145,6 @@ resource "aws_iam_role_policy_attachment" "k3s_ecr_pull" {
   policy_arn = aws_iam_policy.k3s_ecr_pull.arn
 }
 
-resource "aws_iam_role_policy_attachment" "k3s_ssm_read" {
-  role       = aws_iam_role.k3s.name
-  policy_arn = aws_iam_policy.k3s_ssm_read.arn
-}
-
 resource "aws_iam_role_policy_attachment" "k3s_ssm_core" {
   role       = aws_iam_role.k3s.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"

@@ -24,4 +24,4 @@ terraform apply
 ```
 
 앱 GitOps는 `S3_BUCKET_NAME=agent-knowledge-static`과 기본 AWS 자격증명 체인을 사용합니다. 정적 AWS 키를
-앱 Secret에 넣지 않습니다. 공유 PostgreSQL·SSM 연결 Secret은 앱 배포 구성이 관리합니다.
+앱 Secret에 넣지 않습니다. 공유 PostgreSQL·Secrets Manager 연결 Secret은 앱 배포 구성이 관리합니다.

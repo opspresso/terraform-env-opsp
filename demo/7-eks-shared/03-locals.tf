@@ -13,7 +13,7 @@ locals {
       namespace       = "agent-studio"
       service_account = "agent-studio"
     }
-    # Agent Runway manages tenant variables (SSM), object credentials and tenant Pod Identity.
+    # Agent Runway manages tenant variables (Secrets Manager), object credentials and tenant Pod Identity.
     "agent-runway" = {
       namespace       = "agent-runway"
       service_account = "agent-runway"

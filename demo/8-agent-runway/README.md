@@ -5,12 +5,12 @@ Agent Runway의 테넌트 리소스와 Variable에 필요한 AWS 리소스입니
 
 | 리소스 | 용도 |
 | --- | --- |
-| KMS `alias/agent-runway` | SSM `/agent-runway/<cluster>/<project>/<env>/<VARIABLE>` SecureString 암호화 |
+| KMS `alias/agent-runway` | Secrets Manager `/agent-runway/<cluster>/<project>/<env>/<VARIABLE>` 암호화 |
 | S3 `agent-runway-objects` | `bucket` 리소스의 공유 bucket. prefix `<cluster>/app-<project>-<env>/<name>/` |
 | S3 lifecycle `expire-source-archives` | 소스 아카이브 `<cluster>/_sources/`를 2일 뒤 삭제(승인 대기 24시간보다 김). Runway가 올리고(`pod-role--agent-runway`) `app-build-v2`의 checkout 단계가 읽는다(`pod-role--delivery-source`) |
 | IAM `agent-runway-sandbox-objects` | Runway가 assume해 Sandbox용 단기 credential을 발급 |
 | IAM `agent-runway-tenant-objects` | 테넌트 앱의 Pod Identity 역할. 클러스터·namespace session tag로 객체 접근을 제한 |
-| IAM `agent-runway-tenant-secrets` | 테넌트 SecretStore가 session tag의 Project·Environment 경로와 Nexus 읽기 계정의 고정 SSM 키만 읽는 역할. 게시 계정은 읽지 못한다 |
+| IAM `agent-runway-tenant-secrets` | 테넌트 SecretStore가 session tag의 Project·Environment 경로와 Nexus 읽기 계정의 고정 Secrets Manager 시크릿만 읽는 역할. 게시 계정은 읽지 못한다 |
 
 `4-role`의 `pod-role--agent-runway`를 먼저 적용하고 이 디렉터리를 적용합니다. `5-eks`는 서비스 계정에
 Pod Identity를 연결합니다. kro 전용 bucket은 ACK S3 controller가 관리하며 테넌트 역할은 bucket의 클러스터와
