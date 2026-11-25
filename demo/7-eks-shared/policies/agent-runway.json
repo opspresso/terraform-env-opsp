@@ -34,6 +34,51 @@
       }
     },
     {
+      "Sid": "RunwaySecretValues",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:ListSecretVersionIds",
+        "secretsmanager:DeleteSecret",
+        "secretsmanager:RestoreSecret"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:ap-northeast-2:*:secret:/agent-runway/*"
+      ]
+    },
+    {
+      "Sid": "ListRunwaySecretNames",
+      "Effect": "Allow",
+      "Action": "secretsmanager:ListSecrets",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-northeast-2"
+        }
+      }
+    },
+    {
+      "Sid": "RunwaySecretKey",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "secretsmanager.ap-northeast-2.amazonaws.com"
+        },
+        "ForAnyValue:StringEquals": {
+          "kms:ResourceAliases": "alias/agent-runway"
+        }
+      }
+    },
+    {
       "Sid": "AccountChoices",
       "Effect": "Allow",
       "Action": [
