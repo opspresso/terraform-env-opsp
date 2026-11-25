@@ -63,7 +63,7 @@ variable "instance_types" {
 }
 
 variable "secrets_key_alias" {
-  description = "The KMS key of Agent Runway's SecureString Variables (RUNWAY_KMS_KEY_ID)."
+  description = "The KMS key of Agent Runway's Secrets Manager Variables (RUNWAY_KMS_KEY_ID)."
   type        = string
   default     = "alias/agent-runway"
 }
