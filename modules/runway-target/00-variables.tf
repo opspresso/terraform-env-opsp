@@ -1,5 +1,5 @@
 variable "target_names" {
-  description = "The names of the Agent Runway environments whose machine (eb) target runs in this account. Each name is the second segment of its Variables' SSM path /agent-runway/<name>/."
+  description = "The names of the Agent Runway environments whose machine (eb) target runs in this account. Each name is the second segment of its Variables' Secrets Manager path /agent-runway/<name>/."
   type        = list(string)
 
   validation {

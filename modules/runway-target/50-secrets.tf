@@ -1,7 +1,7 @@
 # The access role of an account other than Agent Runway's own (agent-platform docs/APP_DELIVERY.md "계정"): Agent
 # Runway assumes it with the account's external ID to list the account's choices for an environment (clusters, VPCs,
 # subnets, certificates, zones, Elastic Beanstalk platforms) and to write the Variables of this account's machine
-# environments to SSM /agent-runway/<environment>/<slug>/<environment>/ with the account's key. Its access check
+# environments to Secrets Manager /agent-runway/<environment>/<slug>/<environment>/ with the account's key. Its access check
 # writes and deletes /agent-runway/_runway/access-check. The instances read their own environment's path with their
 # stack role.
 resource "aws_iam_role" "secrets" {
