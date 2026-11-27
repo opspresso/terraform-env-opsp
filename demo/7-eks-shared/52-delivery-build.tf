@@ -41,7 +41,7 @@ resource "kubernetes_manifest" "delivery_build_node_pool" {
       template = {
         spec = {
           nodeClassRef = { group = "eks.amazonaws.com", kind = "NodeClass", name = kubernetes_manifest.delivery_build_node_class.manifest.metadata.name }
-          taints       = [{ key = "opspresso.com/delivery-build", value = "true", effect = "NoSchedule" }]
+          taints       = [{ key = "agentops.clush.net/delivery-build", value = "true", effect = "NoSchedule" }]
           requirements = concat(local.node_requirements, [
             { key = "kubernetes.io/arch", operator = "In", values = [each.key] },
             { key = "karpenter.sh/capacity-type", operator = "In", values = ["spot"] },
