@@ -7,7 +7,8 @@
 | `20-pod-roles.tf`, `policies/<key>.json`, `policies/trust/pod-identity.json` | Pod Identity 역할 `pod-role--<key>`와 정책. 키 목록은 `03-locals.tf`의 `pod_identities` |
 | `30-pod-identity.tf` | 위 역할과 ServiceAccount를 잇는 `eks-demo` association |
 | `40-github-roles.tf`, `policies/github-*.json`, `policies/trust/github-*.json` | opspresso 저장소 CI가 assume하는 GitHub Actions 역할 |
-| `60-`~`65-*.tf` | 전용 NodeClass·NodePool |
+| `50-workspaces.tf`, `51-rovr-sandboxes.tf`, `52-delivery-build.tf` | 워크로드별 NodeClass·NodePool. 공통 값은 `03-locals.tf`의 `node_class_spec`·`node_requirements` |
+| `90-moved.tf` | 파일 구조를 바꾸며 달라진 리소스 주소의 `moved` |
 
 역할 이름은 다른 root와 서비스가 이름으로 참조한다(예: `pod-role--agent-runway`, `pod-role--delivery-target`). 이름을 바꾸지 않는다.
 이 root는 AWS와 Kubernetes provider를 함께 쓰므로 plan에도 `eks-demo` API 접근 권한이 필요하다.
@@ -15,8 +16,9 @@
 ## Node pool
 
 opspresso 서비스 전용 NodeClass·NodePool을 둔다.
-기본 노드(`baseline-*`, `general`)와 GitHub Actions runner pool은 terraform-env-demo `demo/6-eks-node`가 관리한다.
-EKS 관리형 default NodeClass·NodePool은 변경하지 않는다.
+기본 노드(`general`, `general-amd64`, `core-*`)와 GitHub Actions runner pool은 terraform-env-demo `demo/6-eks-node`가 관리한다.
+두 root는 같은 구조를 쓴다. 파일은 워크로드마다 `NN-<워크로드>.tf` 하나이고, NodeClass(`<워크로드>_node_class`)와 NodePool(`<워크로드>_node_pool`)을 이 순서로 둔다.
+NodePool은 NodeClass·taint·구매 방식·architecture가 다르거나 다른 저장소가 pool 이름을 쓸 때만 나눈다.
 
 | NodePool | 사용처 |
 | --- | --- |
