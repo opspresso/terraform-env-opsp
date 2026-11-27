@@ -8,7 +8,6 @@
 | `30-pod-identity.tf` | 위 역할과 ServiceAccount를 잇는 `eks-demo` association |
 | `40-github-roles.tf`, `policies/github-*.json`, `policies/trust/github-*.json` | opspresso 저장소 CI가 assume하는 GitHub Actions 역할 |
 | `50-workspaces.tf`, `51-rovr-sandboxes.tf`, `52-delivery-build.tf` | 워크로드별 NodeClass·NodePool. 공통 값은 `03-locals.tf`의 `node_class_spec`·`node_requirements` |
-| `90-moved.tf` | 파일 구조를 바꾸며 달라진 리소스 주소의 `moved` |
 
 역할 이름은 다른 root와 서비스가 이름으로 참조한다(예: `pod-role--agent-runway`, `pod-role--delivery-target`). 이름을 바꾸지 않는다.
 이 root는 AWS와 Kubernetes provider를 함께 쓰므로 plan에도 `eks-demo` API 접근 권한이 필요하다.
