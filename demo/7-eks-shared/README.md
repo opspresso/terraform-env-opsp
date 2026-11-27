@@ -42,7 +42,7 @@ rovr 실행 Pod만 받는다. 실행 Pod는 2 CPU·4Gi를 요청하므로 8-CPU 
 
 `delivery-amd64`·`delivery-arm64` pool은 Agent Runway Release의 컨테이너 image를 그 architecture에서 native로 build한다(argocd-env-projects `charts/delivery`
 `files/app-build-v2.yaml`). `build` step은 nodeSelector `karpenter.sh/nodepool: delivery-<arch>`로 이 pool만 쓴다.
-taint `opspresso.com/delivery-build`는 `app-build-v2`의 step만 허용하고, build가 없으면 pool은 비어 있다(`WhenEmpty` 10분).
+taint `agentops.clush.net/delivery-build`는 `app-build-v2`의 step만 허용하고, build가 없으면 pool은 비어 있다(`WhenEmpty` 10분).
 두 pool은 NodeClass `delivery-build`를 쓴다. 기본 NodeClass와 같은 node 역할·subnet·security group을 쓰고, ephemeral disk만 200Gi(`delivery_build_ephemeral_storage_gib`)다.
 kaniko가 Dockerfile의 `RUN`을 build 컨테이너 안에서 실행하므로 build 파일과 layer snapshot이 노드 디스크에 쌓인다. 큰 build(예: Elasticsearch)는 30~60Gi를 쓰고, step의 디스크 요청은 20Gi, 한도는 150Gi다.
 `delivery-arm64`는 8-CPU m·r 노드(32Gi 이상)이고 한도는 노드 4대(CPU 32개·메모리 256Gi)다. `delivery-amd64`는 4·8-CPU m·c·r 노드이고 한도는 CPU 16개·메모리 128Gi다.
